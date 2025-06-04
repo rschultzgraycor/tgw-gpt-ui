@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ask Your Data</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-6">
+  <div class="bg-white shadow-lg rounded-xl p-8 w-full max-w-xl space-y-4">
+    <h1 class="text-2xl font-bold text-gray-800">Ask a Question</h1>
+    <input
+      type="text"
+      id="question"
+      placeholder="e.g. What are the highest paid roles in IT?"
+      class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <button
+      onclick="submitQuestion()"
+      class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition"
+    >
+      Submit
+    </button>
+    <button
+    onclick="fetchLogs()"
+    class="bg-gray-700 text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition"
+    >
+      View Logs
+    </button>
+  
+    <div id="logs" class="mt-6 space-y-3 text-sm text-gray-700"></div>
+    <div id="response" class="mt-4 text-gray-800 whitespace-pre-wrap"></div>
+    <div id="sql" class="mt-2 text-sm text-gray-600 font-mono bg-gray-100 p-3 rounded-lg border border-gray-300"></div>
+  </div>
+
+  <script>
+    async function submitQuestion() {
+  const question = document.getElementById("question").value.trim();
+  const responseDiv = document.getElementById("response");
+  const sqlDiv = document.getElementById("sql");
+  responseDiv.innerHTML = "Thinking...";
+  sqlDiv.innerHTML = "";
+
+  try {
+    const res = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      responseDiv.innerHTML = `✅ ${data.summary}`;
+      sqlDiv.innerHTML = `Generated SQL:\n${data.query}`;
+    } else {
+      responseDiv.innerHTML = `❌ ${data.error}`;
+      sqlDiv.innerHTML = data.generatedSQL ? `Generated SQL:\n${data.generatedSQL}` : '';
+    }
+  } catch (err) {
+    responseDiv.innerHTML = `❌ Error connecting to server: ${err.message}`;
+  }
+}
+  </script>
+  <script>
+    async function fetchLogs() {
+      const logsDiv = document.getElementById("logs");
+      logsDiv.innerHTML = "Loading logs...";
+  
+      try {
+        const res = await fetch("/logs");
+        const data = await res.json();
+  
+        if (res.ok) {
+          if (data.logs.length === 0) {
+            logsDiv.innerHTML = "<p>No logs found.</p>";
+          } else {
+            logsDiv.innerHTML = data.logs.map(log =>
+              `<div class="p-3 border rounded bg-gray-50">
+                <div><strong>Time:</strong> ${new Date(log.Timestamp).toLocaleString()}</div>
+                <div><strong>Question:</strong> ${log.Question}</div>
+                <div><strong>SQL:</strong><br><code class="text-blue-700">${log.GeneratedSQL}</code></div>
+              </div>`
+            ).join('');
+          }
+        } else {
+          logsDiv.innerHTML = `❌ Failed to load logs: ${data.error}`;
+        }
+      } catch (err) {
+        logsDiv.innerHTML = `❌ Error fetching logs: ${err.message}`;
+      }
+    }
+  </script>
+</body>
+</html>
