@@ -91,7 +91,7 @@ function Navbar() {
           </Link>
           <Link
             to="/files"
-            className={`no-underline font-medium text-base pb-1 transition-colors border-b-2 ${location.pathname === "/history" ? "text-[#61dafb] border-[#61dafb]" : "text-white border-transparent hover:text-[#61dafb]"}`}
+            className={`no-underline font-medium text-base pb-1 transition-colors border-b-2 ${location.pathname === "/files" ? "text-[#61dafb] border-[#61dafb]" : "text-white border-transparent hover:text-[#61dafb]"}`}
           >
             Files
           </Link>
