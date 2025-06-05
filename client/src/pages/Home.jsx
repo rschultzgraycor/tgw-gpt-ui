@@ -88,9 +88,25 @@ export default function Home() {
         value={query}
         onChange={e => setQuery(e.target.value)}
         placeholder="Enter your question here..."
-        style={{ width: "100%", fontSize: "1rem", marginTop: "1rem", backgroundColor: "field", border: "1px solid black" }}
+        style={{ width: "100%", fontSize: "1rem", marginTop: "1rem", backgroundColor: "field", border: "1px solid black", padding: ".4em" }}
       />
-      <button onClick={sendQuery} disabled={loading} style={{ width: "100%", fontSize: "1rem", marginTop: "1rem" }}>
+      <button 
+        onClick={sendQuery} 
+        disabled={loading} 
+        style={{ 
+          width: "100%", 
+          fontSize: "1rem", 
+          marginTop: "1rem", 
+          background: loading ? '#b3e0f7' : '#61dafb',
+          color: loading ? '#888' : '#1a2233',
+          border: 'none',
+          borderRadius: 6,
+          fontWeight: 600,
+          boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          transition: 'background 0.2s, color 0.2s',
+        }}
+      >
         Submit
       </button>
       {response && 

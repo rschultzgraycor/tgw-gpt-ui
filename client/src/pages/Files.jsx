@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { VscSyncIgnored } from "react-icons/vsc";
 
 // Helper to build a tree from file paths
@@ -116,7 +115,6 @@ function FileTree({ node, parentPath = "", refreshTree, onFilesUpdated }) {
 
 export default function Files() {
   const [tree, setTree] = useState({});
-  const [flatFiles, setFlatFiles] = useState({});
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
@@ -124,10 +122,6 @@ export default function Files() {
       const res = await fetch("/file-sync");
       const data = await res.json();
       setTree(buildFileTree(data.files || []));
-      // Build a flat map for quick updates
-      const flat = {};
-      (data.files || []).forEach(f => { flat[f.id] = f; });
-      setFlatFiles(flat);
     }
     loadFiles();
   }, [refresh]);
@@ -139,14 +133,23 @@ export default function Files() {
   // Incrementally update files in the tree
   function handleFilesUpdated(updatedFiles) {
     if (!updatedFiles || updatedFiles.length === 0) return;
-    setFlatFiles(prev => {
-      const next = { ...prev };
+    setTree(prevTree => {
+      // Flatten the current tree to a list of files
+      const flat = {};
+      function flatten(node) {
+        if (node.__file) {
+          flat[node.__file.id] = node.__file;
+        } else {
+          Object.values(node).forEach(flatten);
+        }
+      }
+      flatten(prevTree);
+      // Update the changed files
       updatedFiles.forEach(f => {
-        if (next[f.id]) next[f.id] = { ...next[f.id], ignoreFile: f.ignoreFile };
+        if (flat[f.id]) flat[f.id] = { ...flat[f.id], ignoreFile: f.ignoreFile };
       });
-      // Rebuild the tree with updated ignoreFile values
-      setTree(buildFileTree(Object.values(next)));
-      return next;
+      // Rebuild the tree
+      return buildFileTree(Object.values(flat));
     });
   }
 
@@ -155,9 +158,6 @@ export default function Files() {
       <h1 style={{ marginTop: 0, marginBottom: "2rem", fontSize: "2rem", fontWeight: 700 }}>
         File Sync Table
       </h1>
-      <Link to="/" style={{ display: "inline-block", marginBottom: "1em" }}>
-        &#8592; Back to Main
-      </Link>
       <div style={{ marginTop: "1.5rem", background: "#fff", borderRadius: 8, padding: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.07)" }}>
         <FileTree node={tree} refreshTree={refreshTree} onFilesUpdated={handleFilesUpdated} />
       </div>
